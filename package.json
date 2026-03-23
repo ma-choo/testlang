@@ -1,0 +1,27 @@
+{
+  "name": "testlang-syntax",
+  "displayName": "Machoo Test",
+  "description": "Test Syntax Coloring",
+  "version": "0.0.1",
+  "publisher": "Machoo",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "testlang",
+        "aliases": ["Machoo Test"],
+        "extensions": [".q"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "testlang",
+        "scopeName": "source.testlang",
+        "path": "./syntaxes/testlang.tmLanguage.json"
+      }
+    ]
+  }
+}
