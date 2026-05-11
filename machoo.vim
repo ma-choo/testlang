@@ -2,100 +2,89 @@ if exists("b:current_syntax")
   finish
 endif
 
-" =========================
-" COMMENTS
-" =========================
-syntax match machooCommentExclamation /!.*$/
-syntax match machooCommentUnderscore /_.*$/
+let s:cpo_save = &cpo
+set cpo&vim
+syn case ignore
 
-highlight link machooCommentExclamation Comment
-highlight link machooCommentUnderscore Comment
+" -----------------------------
+" Comments
+" -----------------------------
+syn match MyComment "!.*$"
+syn match MyComment "_.*$"
 
+" -----------------------------
+" Strings
+" -----------------------------
+syn region MyString start=+"+ skip=+\\\\\|\\"+ end=+"+
+syn region MyString start=+'+ skip=+\\\\\|\\'+ end=+'+
 
-" =========================
-" KEYWORDS
-" =========================
-syntax keyword machooKeywordControl if and or then else endif while endwhile for next select when endselect return continue ifndef define again
-syntax keyword machooKeywordModifier length set setuniq local common format clear
-syntax keyword machooKeywordFS file close key ind
-syntax keyword machooKeywordFunc FuncProto FuncEnd
-syntax keyword machooKeywordGoto goto go gosub excp excpsub
-syntax keyword machooBoolean true false
+" -----------------------------
+" Numbers
+" -----------------------------
+syn match MyNumber "\<\d\+\>"
+syn match MyNumber "\<0x\x\+\>"
+syn match MyNumber "\<\d\+\.\d*\>"
+syn match MyNumber "\<\d\+e[-+]\=\d\+\>"
 
-highlight link machooKeywordControl Keyword
-highlight link machooKeywordModifier Statement
-highlight link machooKeywordFS Statement
-highlight link machooKeywordFunc Keyword
-highlight link machooKeywordGoto Special
-highlight link machooBoolean Boolean
+" -----------------------------
+" Operators
+" -----------------------------
+syn match MyOperator "[=+\-*/<>&]"
+syn match MyOperator "eq"
+syn match MyOperator "ne"
+syn match MyOperator "gt"
+syn match MyOperator "lt"
 
+" -----------------------------
+" Punctuation
+" -----------------------------
+syn match MyPunct "[()\[\]{};,\.]"
 
-" =========================
-" LABELS
-" =========================
-syntax match machooLabelDefine /^[A-Za-z][A-Za-z0-9]*:/
-syntax match machooLabelRef /\v(goto|go|gosub|excp|excpsub)\s+[A-Za-z][A-Za-z0-9]*/
+" -----------------------------
+" Functions
+" -----------------------------
+syn match MyFunction "\<\h\w*\ze\s*("
 
-highlight link machooLabelDefine Label
-highlight link machooLabelRef Label
+" -----------------------------
+" Labels
+" -----------------------------
+syn match MyLabel "^\s*\h\w*\s*:"
+syn match MyLabel "^\s\{0,3}\d\+"
 
+" -----------------------------
+" Keywords
+" -----------------------------
+"
+" Control Flow
+syn keyword MyControl if and or else endif select when endselect
+syn keyword MyControl repeat endrep while endwhile for to next break continue return again
+syn keyword MyControl length set setuniq clear clearlocal clearcommon funcproto funcbegin funcend
+syn keyword MyControl goto go gosub excp excpsub error
+" syn keyword MyControl #ifndef #define #endif
 
-" =========================
-" FUNCTIONS
-" =========================
+" Decorations
+syn keyword MyDecor local common ref format struct
 
-" function definition: funcbegin name
-syntax match machooFuncDef /\c\<funcbegin\>\s\+\w\+/
-syntax match machooFuncName /\c\<funcbegin\>\s\+\zs\w\+/
+" Constants
+syn keyword MyConstant true false nomatch
 
-highlight link machooFuncDef Keyword
-highlight link machooFuncName Function
+" Goto
 
+" -----------------------------
+" Links
+" -----------------------------
+hi def link MyComment     Comment
+hi def link MyString      String
+hi def link MyNumber      Number
+hi def link MyOperator    Operator
+hi def link MyPunct       Delimiter
+"hi def link MyFunction    Function
+hi def link MyLabel       Label
+hi def link MyControl     Conditional
+hi def link MyDecor       Type
+hi def link MyConstant    Constant
 
-" function calls: name(...)
-syntax match machooFuncCall /\w\+\ze(/
-highlight link machooFuncCall Function
+let b:current_syntax = "mylang"
 
-
-" =========================
-" STRINGS
-" =========================
-syntax region machooStringDouble start=/"/ end=/"/ contains=machooEscape
-syntax region machooStringSingle start=/'/ end=/'/
-
-syntax match machooEscape /""/ contained
-
-highlight link machooStringDouble String
-highlight link machooStringSingle String
-highlight link machooEscape SpecialChar
-
-
-" =========================
-" NUMBERS
-" =========================
-syntax match machooNumber /\v\d+(\.\d+)?/
-
-highlight link machooNumber Number
-
-
-" =========================
-" OPERATORS
-" =========================
-syntax keyword machooOperator eq ne gt lt ge le
-syntax match machooOperatorSymbol /[-+*/=<>&|@]\+/
-
-highlight link machooOperator Operator
-highlight link machooOperatorSymbol Operator
-
-
-" =========================
-" PUNCTUATION
-" =========================
-syntax match machooPunct /[;,_]/
-syntax match machooParen /[()]/
-
-highlight link machooPunct Delimiter
-highlight link machooParen Delimiter
-
-
-let b:current_syntax = "machoo"
+let &cpo = s:cpo_save
+unlet s:cpo_save
