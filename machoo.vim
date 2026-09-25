@@ -1,90 +1,49 @@
-if exists("b:current_syntax")
-  finish
+if exists('b:did_indent')
+    finish
 endif
 
-let s:cpo_save = &cpo
-set cpo&vim
-syn case ignore
+let b:did_indent = 1
 
-" -----------------------------
-" Comments
-" -----------------------------
-syn match MyComment "!.*$"
-syn match MyComment "_.*$"
+let s:RE_LABEL = '^\s*\([A-Za-z_][A-Za-z0-9_]*:\|[0-9]\)'
+let s:RE_PREPROC = '^\s*\%(length\|set\|use\|funcproto\|funcbegin)\>'
+let s:RE_INDENT = '^\s*\%(if\|and\|repeat\|select\|when\|while\)\>'
+let s:RE_DEDENT = '^\s*\%(endif\|endrep\|endselect\|endwhile\)\>'
+let s:RE_LINE_CONTINUATION = '_\s*$'
 
-" -----------------------------
-" Strings
-" -----------------------------
-syn region MyString start=+"+ skip=+\\\\\|\\"+ end=+"+
-syn region MyString start=+'+ skip=+\\\\\|\\'+ end=+'+
+setlocal indentkeys=o,O,0},;,=~use,=~length,=~set,=~endif,=~endrep,=~endselect,=~endwhile
 
-" -----------------------------
-" Numbers
-" -----------------------------
-syn match MyNumber "\<\d\+\>"
-syn match MyNumber "\<0x\x\+\>"
-syn match MyNumber "\<\d\+\.\d*\>"
-syn match MyNumber "\<\d\+e[-+]\=\d\+\>"
+setlocal indentexpr=QGetIndent()
 
-" -----------------------------
-" Operators
-" -----------------------------
-syn match MyOperator "[=+\-*/<>&]"
-syn match MyOperator "eq"
-syn match MyOperator "ne"
-syn match MyOperator "gt"
-syn match MyOperator "lt"
+function! QGetIndent() abort
+    if v:lnum == 1
+        return 0
+    endif
 
-" -----------------------------
-" Punctuation
-" -----------------------------
-syn match MyPunct "[()\[\]{};,\.]"
+    let this_line = getline(v:lnum)
+    let prev_line = getline(v:lnum - 1)
+    let prev_line = substitute(prev_line, '!.*$', '', '')
+    let indent = indent(v:lnum - 1)
+    let is_continued = (prev_line =~? s:RE_LINE_CONTINUATION)
 
-" -----------------------------
-" Functions
-" -----------------------------
-syn match MyFunction "\<\h\w*\ze\s*("
+    " Labels and preprocessor directives start at column 0.
+    if this_line =~# s:RE_LABEL || this_line =~# s:RE_PREPROC
+        return 0
+    endif
 
-" -----------------------------
-" Labels
-" -----------------------------
-syn match MyLabel "^\s*\h\w*\s*:"
-syn match MyLabel "^\s\{0,3}\d\+"
+    " Labels start the following block at column 5.
+    if prev_line =~# s:RE_LABEL
+        return 5
+    endif
 
-" -----------------------------
-" Keywords
-" -----------------------------
-"
-" Control Flow
-syn keyword MyControl if and or else endif select when endselect
-syn keyword MyControl repeat endrep while endwhile for to next break continue return again
-syn keyword MyControl length set setuniq clear clearlocal clearcommon funcproto funcbegin funcend
-syn keyword MyControl goto go gosub excp excpsub error
-" syn keyword MyControl #ifndef #define #endif
+    " Closing keywords reduce indentation.
+    if this_line =~# s:RE_DEDENT
+        let indent -= 2
+    endif
 
-" Decorations
-syn keyword MyDecor local common ref format struct
+    " Opening keywords increase indentation.
+    if prev_line =~# s:RE_INDENT && !is_continued
+        let indent += 2
+    endif
 
-" Constants
-syn keyword MyConstant true false nomatch
-
-" Goto
-
-" -----------------------------
-" Links
-" -----------------------------
-hi def link MyComment     Comment
-hi def link MyString      String
-hi def link MyNumber      Number
-hi def link MyOperator    Operator
-hi def link MyPunct       Delimiter
-"hi def link MyFunction    Function
-hi def link MyLabel       Label
-hi def link MyControl     Conditional
-hi def link MyDecor       Type
-hi def link MyConstant    Constant
-
-let b:current_syntax = "mylang"
-
-let &cpo = s:cpo_save
-unlet s:cpo_save
+    return max([indent, 0])
+endfunction
